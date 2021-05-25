@@ -93,4 +93,37 @@ public with sharing class ClasseDemonstraEstrutura
     }
 
 
+    /* Crie um método que receba um id de usuário e retorne as o valor total da lista 
+    de oportunidades que ele é dono, se o ID for branco, retorne o total de todas as oportunidades */
+
+    public static Decimal oportunidadesUsuario(String pIdUsuario){
+
+        Double somaValorOppsUsuario = 0;
+
+        if(String.isNotBlank(pIdUsuario)){ 
+
+            list<Opportunity> listaOppUsuario = new list<Opportunity>([SELECT GrossTotal__c FROM Opportunity WHERE OwnerId =: pIdUsuario]);
+
+            for(Opportunity values : listaOppUsuario){
+
+                somaValorOppsUsuario += values.GrossTotal__c;
+            }
+
+        } else{
+
+            list<Opportunity> listaOppUsuario = new list<Opportunity>([SELECT GrossTotal__c FROM Opportunity]);
+
+            for(Opportunity values : listaOppUsuario){
+
+                somaValorOppsUsuario += values.GrossTotal__c;
+            }
+
+        }
+
+        System.debug('O valor das oportunidades é: ' + somaValorOppsUsuario);
+
+        return somaValorOppsUsuario;
+    }
+
+
 }
