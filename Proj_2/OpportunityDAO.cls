@@ -3,25 +3,17 @@
 
 public with sharing class OpportunityDAO {
     
-    public static list<Opportunity> Opps(){
+    public static list<Opportunity> getAllOppsList(){
 
-        list<Opportunity> listaOpp = new list<Opportunity>([SELECT Id, Name FROM Opportunity]);
-
-        System.debug('A quantidade de contas com CNPJ é: ' + listaOpp);
-
-        return listaOpp;
+        return [SELECT Id, Name FROM Opportunity];
     }
 
     /* Na classe OpportunityDAO crie um método que receba uma lista de strings 
     com os Ids das oportunidades e retorne uma lista de oportunidades filtrando por esses ids */
 
-    public static list<Opportunity> OportunidadeIds(list<String> plistaIds){
+    public static list<Opportunity> getOppsById(list<String> pListaIds){       
 
-        list<Opportunity> listaOppIds = new list<Opportunity>([SELECT Id, Name FROM Opportunity WHERE Opportunity.Id =: plistaIds]);
-
-        System.debug('A quantidade de contas com CNPJ é: ' + listaOppIds);
-
-        return listaOppIds;
+        return [SELECT Id, Name FROM Opportunity WHERE Id IN : plistaIds];
     }
 
 
