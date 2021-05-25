@@ -54,8 +54,8 @@ public with sharing class ClasseDemonstraEstrutura
         return somaTotal;
     }
 
-    // Crie um método em ClasseDemonstraEstrutura que 
-    // multiplique o primeiro parâmetro com o segundo, se o terceiro prâmetro for verdadeiro
+    /* Crie um método em ClasseDemonstraEstrutura que multiplique o primeiro parâmetro 
+    com o segundo, se o terceiro prâmetro for verdadeiro */
     
     public static Integer multiplicaValores(Integer pparam1, Integer pparam2, Boolean condicao){
 
@@ -70,6 +70,26 @@ public with sharing class ClasseDemonstraEstrutura
 
         System.debug('Multiplicação = ' + 0);
         return 0;
+    }
+
+
+    /* Crie um método que leia uma lista de uma oportunidade e retorne o valor da soma dos totais */
+
+    public static Decimal somaOportunidades(){
+
+        list<Opportunity> listaOportunidades = new list<Opportunity>([SELECT Id, Name, GrossTotal__c FROM Opportunity]);
+
+        Double somaValorOportunidades = 0;
+
+        for(Opportunity valores : listaOportunidades){
+
+            somaValorOportunidades += valores.GrossTotal__c;
+
+        }
+
+        System.debug('O valor da soma dos totais é: ' + somaValorOportunidades);
+
+        return somaValorOportunidades;
     }
 
 
