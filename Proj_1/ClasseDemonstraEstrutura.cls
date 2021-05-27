@@ -124,6 +124,65 @@ public with sharing class ClasseDemonstraEstrutura
 
         return somaValorOppsUsuario;
     }
+    
+    
+    
+    //Operações DML
+    public static void demostracaoDML()
+    {
+
+        List<Opportunity> insertOppListVariavel = new List<Opportunity>();
+
+        //Inserção de dados
+        Opportunity oppVariavel1 = new Opportunity();
+        oppVariavel1.Name        = 'Nome da oportunidade de exemplo 1';
+        oppVariavel1.StageName   = 'Prospecting';
+        oppVariavel1.CloseDate   = system.Today();        
+        insertOppListVariavel.add(oppVariavel1);
+        
+        Opportunity oppVariavel2 = new Opportunity();
+        oppVariavel2.Name        = 'Nome da oportunidade de exemplo 2';
+        oppVariavel2.StageName   = 'Prospecting';
+        oppVariavel2.CloseDate   = system.Today();        
+        insertOppListVariavel.add(oppVariavel2);
+
+        Opportunity oppVariavel3 = new Opportunity();
+        oppVariavel3.Name        = 'Nome da oportunidade de exemplo 3';
+        oppVariavel3.StageName   = 'Prospecting';
+        oppVariavel3.CloseDate   = system.Today();        
+        insertOppListVariavel.add(oppVariavel3);
+
+        Opportunity oppVariavel4 = new Opportunity();
+        oppVariavel4.Name        = 'Nome da oportunidade de exemplo 4';
+        oppVariavel4.StageName   = 'Prospecting';
+        oppVariavel4.CloseDate   = system.Today();        
+        insertOppListVariavel.add(oppVariavel4);
+
+        Opportunity oppVariavel5 = new Opportunity();
+        oppVariavel5.Name        = 'Nome da oportunidade de exemplo 5';
+        oppVariavel5.StageName   = 'Prospecting';
+        oppVariavel5.CloseDate   = system.Today();        
+        insertOppListVariavel.add(oppVariavel5);
+
+        insert insertOppListVariavel;
+
+        //Atualizar Dados
+        Opportunity oppVariavel = [Select Id From Opportunity Where Name = 'Nome da oportunidade de exemplo' Limit 1];
+        oppVariavel.Name = 'Nome da oportunidade de exemplo ATUALIZADO';
+        update oppVariavel;
+
+        //Excluir Dados
+        List<Opportunity> oppVariavel = [Select Id From Opportunity Where Name = 'Nome da oportunidade de exemplo ATUALIZADO' Limit 1];
+        delete oppVariavel;
+
+        //Upsert
+        Opportunity oppUpsertVariavel = new Opportunity();
+        oppUpsertVariavel.Name        = 'Nova oportunidade';
+        oppUpsertVariavel.StageName   = 'Qualification';
+        oppUpsertVariavel.CloseDate   = system.Today();        
+        upsert oppUpsertVariavel Name;
+
+    }
 
 
 }
