@@ -1,0 +1,29 @@
+<template>
+
+    <lightning-card title="Lista de oportunidades" icon-name="doctype:audio">
+
+        <section style="padding-left:30px;">
+
+            <table class="slds-table slds-table_bordered slds-table_striped">
+
+                <tr>
+                    <th>Id</th>
+                    <th>Nome da Oportunidade</th>
+                </tr>
+
+                <template for:each={opportunities} for:item="o">
+
+                    <tr key={o.Id}>
+                        <td>{o.Id}</td>
+                        <td>{o.Name}</td>
+                    </tr>
+
+                </template>
+
+            </table>
+
+        </section>
+
+    </lightning-card>
+    
+</template>
