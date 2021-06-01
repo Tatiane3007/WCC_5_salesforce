@@ -3,9 +3,14 @@
 
 public with sharing class OpportunityDAO {
     
-    public static list<Opportunity> getAllOppsList(){
+    public static List<Opportunity> getAllOpportunityListMetodo(){
 
-        return [SELECT Id, Name FROM Opportunity];
+        List<Opportunity> listOpportunityVariavel = [Select Id, Name, Account.CNPJ__c From Opportunity];
+
+        system.debug('Lista com oportunidades não filtradas '+listOpportunityVariavel);
+
+        return listOpportunityVariavel;
+
     }
 
 
