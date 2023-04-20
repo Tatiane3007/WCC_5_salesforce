@@ -1,0 +1,351 @@
+<apex:page showHeader="true" sidebar="true" controller="ControllerAtribuicaoEquipeContas" tabStyle="COMPARTILHAMENTO_TEMPORARIO__c" id="page" docType="HTML-5.0">
+    
+    <apex:includeScript value="{!URLFOR($Resource.CRM, 'scripts/jquery-1.11.1.js')}"/>
+    <apex:includeScript value="/soap/ajax/35.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/35.0/apex.js"/>
+    
+    <script>
+        function openLookup(baseURL, width, modified, searchParam){
+            sforce.connection.sessionId = '{!$Api.Session_ID}';
+            var originalbaseURL = baseURL;
+            var originalwidth = width;
+            var originalmodified = modified;
+            var originalsearchParam = searchParam;
+            //var lookupType = baseURL.substr(baseURL.length-3, 3);
+            var lookupType = baseURL.substring(baseURL.indexOf("lktp="),baseURL.indexOf("lktp=")+8);
+            lookupType = lookupType.replace("lktp=", "");
+            if (modified == '1') baseURL = baseURL + searchParam;
+            
+            var isCustomLookup = false;
+            var isCustomLookupUsuario = false;
+            
+            // O código "005" siginifica que o lookup será de UsuarioSearchPage
+            //if(lookupType == "005"){
+            var urlArr = baseURL.split("&");
+            var txtId = '';
+            if(urlArr.length > 2) {
+                urlArr = urlArr[1].split('=');
+                txtId = urlArr[1];
+                // }
+                
+                // URL da página UsuarioSearchPage
+                baseURL = "/apex/UsuarioSearchPage?txt=" + txtId;
+                
+                // Abaixo é apresentado o ID de apex:form que controla "form"
+                baseURL = baseURL + "&frm=" + escapeUTF("{!$Component.form}");
+                if (modified == '1') {
+                    baseURL = baseURL + "&lksearch=" + searchParam;
+                }
+                
+                // Abaixo são o ID do inputField de pesquisa que será customizado
+                if(txtId.indexOf('idInputTextUsuario') > -1){
+                    isCustomLookup = true;
+                }
+                if(txtId.indexOf('IdResponsavel') > -1){
+                    isCustomLookup = true;
+                }
+            }
+            
+            if(isCustomLookup == true){
+                openPopup(baseURL, "lookup", 350, 480, "width="+width+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
+            }
+            else {
+                if (modified == '1') originalbaseURL = originalbaseURL + originalsearchParam;
+                openPopup(originalbaseURL, "lookup", 350, 480, "width="+originalwidth+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
+            }
+        }
+    
+        function selecionaTodos(param, lista) {
+            var inputElem = document.getElementsByTagName("input");
+            for(var i=0; i < inputElem.length; i++) {
+                if(inputElem[i].id.indexOf(lista) != -1)
+                    inputElem[i].checked = param.checked;
+            }
+        }
+    
+        function desmarca(param, check){
+            if (!param.checked){
+                var inputElem = document.getElementsByTagName("input");
+                for(var i=0; i < inputElem.length; i++) {
+                    if(inputElem[i].id.indexOf(check) > 0)
+                        inputElem[i].checked = false;
+                }
+            }
+        }
+    </script>
+    <style>
+        hr{
+            opacity: 0.3;
+        }
+        .format{
+            margin-top:0.5%;
+            margin-left:6%;
+            text-align: right;
+            font-size: 91%;
+            font-weight: bold;
+            color: #333;
+        }
+        .cabecalho_tabela{
+            text-align: center !important;
+            font-weight: bold !important;
+        }
+        .col1{
+            width:160px;
+        }
+        .col2{
+            width:240px;
+        }
+    </style>
+    
+    
+    <apex:tabPanel switchType="client" selectedTab="atribuicaoEquipeContas" id="theTabPanel">
+        <apex:tab label="Delegar Contas" name="atribuicaoEquipeContas" id="tab_One">
+            <apex:form id="atribuicaoEquipeContasForm">
+                <apex:actionStatus id="idStatusLoading">
+                    <apex:facet name="start">
+                        <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;
+                                                                             height: 100%;opacity:0.65;width:100%;"> 
+                            <div class="waitingHolder" style="top: 50px; width: 91px;">
+                                <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                                <span class="waitingDescription">Please Wait...</span>
+                            </div>
+                        </div>
+                    </apex:facet>
+                </apex:actionStatus>
+                
+                <div align="center">
+                    <apex:outputLabel id="idOutputDefinirTipoExibicao" value="Tipo de exibição: "/>
+                    <apex:selectList id="idSelectTipoExibicao" value="{!tipoExibicao}" size="1" required="true">
+                        <apex:actionSupport event="onchange" reRender="atribuicaoEquipeContasForm, todosPaineisPanel"
+                                            status="idStatusLoading" action="{!verificarVisualizacao}"/>
+                        <apex:selectOptions id="idOpcoesTipoExibicao" value="{!opcoesTipoExibicao}"/>
+                    </apex:selectList>
+                </div>
+                
+                <apex:outputPanel id="idPanelContasMassa" rendered="{!tipoExibicao == 'Equipe de Contas em Massa'}">
+                    <br/>
+                    <apex:pageBlock id="idPageBlockContaMassa" title="Equipe de Contas em Massa" mode="Edit">
+                        <apex:pageMessages id="idPageMessagesContasMassa" rendered="{!exibirMsgPanelContasMassa}"/>
+                        
+                        <apex:pageBlockSection id="idSectionOpcoesContasMassa" columns="1" title="Opção">
+                            <apex:selectRadio id="idEventoEquipeMassa" layout="pageDirection" value="{!eventoMassaSelecionado}">
+                                <apex:selectOptions value="{!tiposEventoMassa}"/>
+                                <apex:actionSupport event="onchange" action="{!prepararEventoEquipeMassa}" reRender="idPanelContasMassa, idPageBlockNovoMembro"
+                                                    status="idStatusLoadingPanelContasMassa"/>
+                            </apex:selectRadio>
+                        </apex:pageBlockSection>
+                        
+                        <apex:pageBlockSection id="idSectionSelecionarMembroContasMassa" columns="2" title="Membro" rendered="{!exibirPesquisaContas}">
+                            <apex:panelGrid columns="2" id="idPainelGridNovoMembro" columnClasses="col1, col2">
+                                <apex:outputLabel value="Membro {!if (eventoMassaSelecionado == 'AdicionarMembro', 'a ser adicionado',
+                                                         if (eventoMassaSelecionado == 'RemoverMembro', 'a ser removido', 'substituto'))}"
+                                                  styleClass="format"/>
+                                <apex:pageBlockSectionItem id="idSectionNovoMembro">
+                                    <apex:define name="idDefineMembro">                
+                                        <div class="requiredInput">
+                                            <div class="requiredBlock"></div>
+                                            <apex:inputField id="idNovoMembroContaMassa" value="{!novoMembroContaMassa.UserId}" required="false"/>
+                                        </div>
+                                    </apex:define>
+                                </apex:pageBlockSectionItem>
+                            </apex:panelGrid>
+                            <apex:panelGrid columns="2" id="idPainelGridMembroSubstituido" columnClasses="col1, col2" rendered="{!eventoMassaSelecionado == 'AlterarMembro'}">
+                                <apex:outputLabel value="Membro a ser substituído" styleClass="format"/>
+                                <apex:pageBlockSectionItem id="idSectionMembroSubstituido">
+                                    <apex:define name="idDefineMembro">                
+                                        <div class="requiredInput">
+                                            <div class="requiredBlock"></div>
+                                            <apex:inputField id="idMembroSubstituido" value="{!membroSubstituido.UserId}" required="false"/>
+                                        </div>
+                                    </apex:define>
+                                </apex:pageBlockSectionItem>
+                            </apex:panelGrid>
+                        </apex:pageBlockSection>
+                        
+                        <apex:pageBlockSection id="idSectionCriteriosPesquisaContasMassa" columns="1" rendered="{!exibirPesquisaContas}" title="Pesquisar Contas">
+                            <apex:outputPanel >
+                                <apex:outputText value="{!$Label.CRITERIO} 1: "/>
+                                <apex:selectList value="{!campoContaSelecionado1}" size="1" id="idListaCamposConta1">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaCamposConta}"/>
+                                </apex:selectList>
+                                <apex:selectList value="{!opcaoSelecionada1}" size="1" id="idListaOpcoes1">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaOpcoesCriterio}"/>
+                                </apex:selectList>
+                                <apex:inputText id="idCriterio1" maxlength="40" value="{!criterio1}"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel >
+                                <apex:outputText value="{!$Label.CRITERIO} 2: "/>
+                                <apex:selectList value="{!campoContaSelecionado2}" size="1" id="idListaCamposConta2">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaCamposConta}"/>
+                                </apex:selectList>
+                                <apex:selectList value="{!opcaoSelecionada2}" size="1" id="idListaOpcoes2">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaOpcoesCriterio}"/>
+                                </apex:selectList>
+                                <apex:inputText id="idCriterio2" maxlength="40" value="{!criterio2}"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel >
+                                <apex:outputText value="{!$Label.CRITERIO} 3: "/>
+                                <apex:selectList value="{!campoContaSelecionado3}" size="1" id="idListaCamposConta3">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaCamposConta}"/>
+                                </apex:selectList>
+                                <apex:selectList value="{!opcaoSelecionada3}" size="1" id="idListaOpcoes3">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaOpcoesCriterio}"/>
+                                </apex:selectList>
+                                <apex:inputText id="idCriterio3" maxlength="40" value="{!criterio3}"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel >
+                                <apex:outputText value="{!$Label.CRITERIO} 4: "/>
+                                <apex:selectList value="{!campoContaSelecionado4}" size="1" id="idListaCamposConta4">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaCamposConta}"/>
+                                </apex:selectList>
+                                <apex:selectList value="{!opcaoSelecionada4}" size="1" id="idListaOpcoes4">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaOpcoesCriterio}"/>
+                                </apex:selectList>
+                                <apex:inputText id="idCriterio4" maxlength="40" value="{!criterio4}"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel >
+                                <apex:outputText value="{!$Label.CRITERIO} 5: "/>
+                                <apex:selectList value="{!campoContaSelecionado5}" size="1" id="idListaCamposConta5">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaCamposConta}"/>
+                                </apex:selectList>
+                                <apex:selectList value="{!opcaoSelecionada5}" size="1" id="idListaOpcoes5">
+                                    <apex:actionSupport event="onchange" reRender="newvalue"/>
+                                    <apex:selectOptions value="{!listaOpcoesCriterio}"/>
+                                </apex:selectList>
+                                <apex:inputText id="idCriterio5" maxlength="40" value="{!criterio5}"/>
+                            </apex:outputPanel>
+                            <div align="right">
+                                <i>Para campos de data, insira o valor no seguinte formato: dd/mm/yyyy</i>
+                            </div>
+                            
+                            <apex:outputPanel id="idPanelBotoes">
+                                <div align="center">
+                                    <apex:commandButton action="{!pesquisarContas}" status="idStatusLoadingPanelContasMassa" value="Pesquisar"
+                                                        reRender="idSectionCriteriosPesquisaContasMassa, idPanelListaContas, idPageMessagesContasMassa"/>
+                                    <apex:commandButton action="{!limparCriterios}" status="idStatusLoadingPanelContasMassa" value="Limpar"
+                                                        reRender="idPanelContasMassa"/>
+                                </div>
+                            </apex:outputPanel>
+                            <br/>
+                            
+                            <apex:outputPanel id="idPanelListaContas" rendered="{!consultaRealizada}">
+                                <hr/>
+                                <apex:pageMessages id="idPageMessagesListaContas"/>
+                                <apex:outputPanel id="idPanelBotaoAtribuirContasMassa" rendered="{!listaContasSelecionaveis.size > 0}">
+                                    <apex:outputPanel layout="none" rendered="{!listaContasSelecionaveis.size > 0}">
+                                        <apex:commandButton action="{!primeiraPagina}" title="Inicio" value="<<" disabled="{!contasSelecionaveis.desabilitaPrimeiraPagina}" 
+                                                            reRender="idPanelListaContas"/>
+                                        <apex:commandButton action="{!paginaAnterior}" title="Anterior" value="<" disabled="{!contasSelecionaveis.desabilitaPaginaAnterior}"
+                                                            reRender="idPanelListaContas"/>
+                                        <apex:commandButton action="{!proximaPagina}" title="Proximo" value=">" disabled="{!contasSelecionaveis.desabilitaProximaPagina}"
+                                                            reRender="idPanelListaContas"/>
+                                        <apex:commandButton action="{!ultimaPagina}" title="Fim" value=">>" disabled="{!contasSelecionaveis.desabilitaUltimaPagina}"
+                                                            reRender="idPanelListaContas"/>
+                                        <div align="center" style="margin-left:-150px; margin-top:-20px">
+                                        <apex:outputPanel id="idPanelPapelNovoMembro">
+                                            <apex:outputText value="Papel do novo membro: " rendered="{!eventoMassaSelecionado == 'AdicionarMembro'}"/>
+                                            <apex:outputText value="Papel do membro a ser removido: " rendered="{!eventoMassaSelecionado == 'RemoverMembro'}"/>
+                                            <apex:outputText value="Papel do membro substituto: " rendered="{!eventoMassaSelecionado == 'AlterarMembro'}"/>
+                                            <apex:selectList value="{!papelSelecionado}" size="1" >
+                                                <apex:selectOptions value="{!listaOpcoesPapel}"/>
+                                            </apex:selectList>
+                                        </apex:outputPanel>
+                                        <apex:commandButton action="{!atribuirContasMassa}" status="idStatusLoadingPanelContasMassa" value="Atribuir"
+                                                            reRender="idPanelListaContas" style="margin-bottom:3px;"
+                                                            rendered="{!eventoMassaSelecionado == 'AdicionarMembro'}"/>
+                                        <apex:commandButton action="{!removerContasMassa}" status="idStatusLoadingPanelContasMassa" value="Remover"
+                                                            reRender="idPanelListaContas" style="margin-bottom:3px;"
+                                                            rendered="{!eventoMassaSelecionado == 'RemoverMembro'}"/>
+                                        <apex:commandButton action="{!substituirContasMassa}" status="idStatusLoadingPanelContasMassa" value="Substituir"
+                                                            reRender="idPanelListaContas" style="margin-bottom:3px;"
+                                                            rendered="{!eventoMassaSelecionado == 'AlterarMembro'}"/>
+                                    </div>
+                                    </apex:outputPanel>
+                                    
+                                    <br/>
+                                    
+                                    <apex:outputText value="Exibindo " style="font-style: italic;"/>
+                                    <apex:outputText value="{!qtdContasAtual} " style="font-weight:bold; color:blue;"/>
+                                    <apex:outputText value="Contas do total de " style="font-style: italic;"/>
+                                    <apex:outputText value="{!totalContas} " style="font-weight:bold; color:blue;"/>
+                                    <apex:outputText value="que " style="font-style: italic;"/>
+                                    <apex:outputField value="{!novoMembroContaMassa.UserId}" style="font-weight:bold !important; color:blue !important;"/>
+                                    <apex:outputText value=" ainda não faz parte da Equipe de Contas" style="font-style: italic;" rendered="{!eventoMassaSelecionado != 'RemoverMembro'}"/>
+                                    <apex:outputText value=" faz parte da Equipe de Contas" style="font-style: italic;" rendered="{!eventoMassaSelecionado == 'RemoverMembro'}"/>
+                                    <apex:outputText value=" e que " style="font-style: italic;" rendered="{!eventoMassaSelecionado == 'AlterarMembro'}"/>
+                                    <apex:outputField value="{!membroSubstituido.UserId}" style="font-weight:bold !important; color:blue !important;" rendered="{!eventoMassaSelecionado == 'AlterarMembro'}"/>
+                                    <apex:outputText value=" faz." style="font-style: italic;" rendered="{!eventoMassaSelecionado == 'AlterarMembro'}"/>
+                                    
+                                    <apex:pageBlockTable id="idroableListaContasMassa" align="center" value="{!listaContasSelecionaveis}" var="selecionavel" headerClass="cabecalho_tabela">
+                                        <apex:column styleClass="cabecalho_tabela" width="10">
+                                            <apex:facet name="header">
+                                                <apex:inputCheckbox id="selecionaTodosEquipeContas">
+                                                    <apex:actionSupport event="onclick" onsubmit="selecionaTodos(this, 'selecionadoEquipeContas')" reRender="idroableListaContasMassa"/>
+                                                </apex:inputCheckbox>
+                                            </apex:facet>
+                                            <apex:inputCheckbox id="selecionadoEquipeContas" value="{!selecionavel.selecionado}">
+                                                <apex:actionSupport event="onclick" onsubmit="desmarca(this, 'selecionaTodosEquipeContas')" reRender="idroableListaContasMassa"/>
+                                            </apex:inputCheckbox>
+                                        </apex:column>
+                                        <apex:column value="{!selecionavel.conta.Name}"/>
+                                        <apex:column value="{!selecionavel.conta.CNPJ__c}"/>
+                                        <apex:column value="{!selecionavel.conta.CPF__pc}"/>
+                                        <apex:column value="{!selecionavel.conta.NME_GRUPO_ECON_SAUDE__c}"/>
+                                        <apex:column value="{!selecionavel.conta.CODIGO_EMPRESA__c}"/>
+                                        <apex:column value="{!selecionavel.conta.SUCURSAL__c}"/>
+                                    </apex:pageBlockTable>
+                                </apex:outputPanel>
+                                
+                                <apex:outputPanel rendered="{!listaContasSelecionaveis.size <= 0}" style="color:red; font-weight:bold;">
+                                    <div align="center">
+                                        <apex:outputText value="Não há Contas pra exibir com os critérios informados ou que "/>
+                                        <apex:outputField value="{!novoMembroContaMassa.UserId}"/>
+                                        <apex:outputText value=" já não seja membro." rendered="{!eventoMassaSelecionado != 'RemoverMembro'}"/>
+                                        <apex:outputText value=" já seja membro." rendered="{!eventoMassaSelecionado == 'RemoverMembro'}"/>
+                                    </div>
+                                </apex:outputPanel>
+                                <br/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
+                    <apex:actionStatus id="idStatusLoadingPanelContasMassa">
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb; height: 100%;opacity:0.65;width:100%;"> 
+                                <div class="waitingHolder" style="top: middle; width: center;">
+                                    <img class="waitingImage" src="/img/loading.gif" title="Please Wait..."/>
+                                    <span class="waitingDescription">Please Wait...</span>
+                                </div>
+                            </div>
+                        </apex:facet>
+                    </apex:actionStatus>
+                </apex:outputPanel>
+            </apex:form>
+            
+            <apex:outputPanel id="todosPaineisPanel">
+                <apex:outputPanel id="entradaDelegarContasPanel" rendered="{!tipoExibicao == 'Delegar Contas'}">
+                    <br/>
+                    <apex:include pageName="DelegarContasPage" id="frameDelegarContas"/>
+                </apex:outputPanel>
+                <apex:outputPanel id="entradaDelegarAprovacaoPanel" rendered="{!tipoExibicao == 'Delegar Aprovações'}">
+                    <br/>
+                    <apex:include pageName="DelegarAprovacoesPage" id="frameDelegarAprovacoes"/>
+                </apex:outputPanel>
+            </apex:outputPanel>
+
+        </apex:tab>
+        
+        <apex:tab label="Detalhes Compartilhamento Temporario" name="tab_detCompTemp" id="tab_Two">
+            <apex:iframe src="CompartilhamentoTemporarioPage" scrolling="true" id="frameCompartilhamento"/>
+        </apex:tab>
+
+    </apex:tabPanel>
+</apex:page>
