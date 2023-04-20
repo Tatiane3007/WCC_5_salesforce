@@ -1,103 +1,5 @@
 <apex:page showHeader="true" sidebar="true" controller="ControllerAtribuicaoEquipeContas" tabStyle="COMPARTILHAMENTO_TEMPORARIO__c" id="page" docType="HTML-5.0">
     
-    <apex:includeScript value="{!URLFOR($Resource.CRM, 'scripts/jquery-1.11.1.js')}"/>
-    <apex:includeScript value="/soap/ajax/35.0/connection.js"/>
-    <apex:includeScript value="/soap/ajax/35.0/apex.js"/>
-    
-    <script>
-        function openLookup(baseURL, width, modified, searchParam){
-            sforce.connection.sessionId = '{!$Api.Session_ID}';
-            var originalbaseURL = baseURL;
-            var originalwidth = width;
-            var originalmodified = modified;
-            var originalsearchParam = searchParam;
-            //var lookupType = baseURL.substr(baseURL.length-3, 3);
-            var lookupType = baseURL.substring(baseURL.indexOf("lktp="),baseURL.indexOf("lktp=")+8);
-            lookupType = lookupType.replace("lktp=", "");
-            if (modified == '1') baseURL = baseURL + searchParam;
-            
-            var isCustomLookup = false;
-            var isCustomLookupUsuario = false;
-            
-            // O código "005" siginifica que o lookup será de UsuarioSearchPage
-            //if(lookupType == "005"){
-            var urlArr = baseURL.split("&");
-            var txtId = '';
-            if(urlArr.length > 2) {
-                urlArr = urlArr[1].split('=');
-                txtId = urlArr[1];
-                // }
-                
-                // URL da página UsuarioSearchPage
-                baseURL = "/apex/UsuarioSearchPage?txt=" + txtId;
-                
-                // Abaixo é apresentado o ID de apex:form que controla "form"
-                baseURL = baseURL + "&frm=" + escapeUTF("{!$Component.form}");
-                if (modified == '1') {
-                    baseURL = baseURL + "&lksearch=" + searchParam;
-                }
-                
-                // Abaixo são o ID do inputField de pesquisa que será customizado
-                if(txtId.indexOf('idInputTextUsuario') > -1){
-                    isCustomLookup = true;
-                }
-                if(txtId.indexOf('IdResponsavel') > -1){
-                    isCustomLookup = true;
-                }
-            }
-            
-            if(isCustomLookup == true){
-                openPopup(baseURL, "lookup", 350, 480, "width="+width+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
-            }
-            else {
-                if (modified == '1') originalbaseURL = originalbaseURL + originalsearchParam;
-                openPopup(originalbaseURL, "lookup", 350, 480, "width="+originalwidth+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
-            }
-        }
-    
-        function selecionaTodos(param, lista) {
-            var inputElem = document.getElementsByTagName("input");
-            for(var i=0; i < inputElem.length; i++) {
-                if(inputElem[i].id.indexOf(lista) != -1)
-                    inputElem[i].checked = param.checked;
-            }
-        }
-    
-        function desmarca(param, check){
-            if (!param.checked){
-                var inputElem = document.getElementsByTagName("input");
-                for(var i=0; i < inputElem.length; i++) {
-                    if(inputElem[i].id.indexOf(check) > 0)
-                        inputElem[i].checked = false;
-                }
-            }
-        }
-    </script>
-    <style>
-        hr{
-            opacity: 0.3;
-        }
-        .format{
-            margin-top:0.5%;
-            margin-left:6%;
-            text-align: right;
-            font-size: 91%;
-            font-weight: bold;
-            color: #333;
-        }
-        .cabecalho_tabela{
-            text-align: center !important;
-            font-weight: bold !important;
-        }
-        .col1{
-            width:160px;
-        }
-        .col2{
-            width:240px;
-        }
-    </style>
-    
-    
     <apex:tabPanel switchType="client" selectedTab="atribuicaoEquipeContas" id="theTabPanel">
         <apex:tab label="Delegar Contas" name="atribuicaoEquipeContas" id="tab_One">
             <apex:form id="atribuicaoEquipeContasForm">
@@ -341,10 +243,6 @@
                 </apex:outputPanel>
             </apex:outputPanel>
 
-        </apex:tab>
-        
-        <apex:tab label="Detalhes Compartilhamento Temporario" name="tab_detCompTemp" id="tab_Two">
-            <apex:iframe src="CompartilhamentoTemporarioPage" scrolling="true" id="frameCompartilhamento"/>
         </apex:tab>
 
     </apex:tabPanel>
